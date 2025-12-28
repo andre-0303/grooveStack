@@ -13,7 +13,7 @@ export default function Home() {
 
       {/* Subtítulo */}
       <p className="mt-6 max-w-xl text-zinc-400 text-lg">
-        Controle artistas, álbuns, estado da capa e detalhes da sua coleção em
+        Controle artistas, álbuns, estado da  capa e detalhes da sua coleção em
         um único lugar. Simples, rápido e feito para colecionadores.
       </p>
 

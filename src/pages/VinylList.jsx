@@ -1,22 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import VinylCard from "../components/VinylCard";
 import EmptyState from "../components/EmptyState";
+import { getVinyls } from "../services/api";
+import { deleteVinyl } from "../services/api";
 
 export default function VinylList() {
-  const [vinyls, setVinyls] = useState([
-    {
-      id: 1,
-      artist: "Pink Floyd",
-      album: "The Dark Side of the Moon",
-      year: 1973,
-      coverCondition: "Near Mint",
-      cover:
-        "https://upload.wikimedia.org/wikipedia/en/3/3b/Dark_Side_of_the_Moon.png",
-    },
-  ]);
+  const [vinyls, setVinyls] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  function handleDelete(id) {
-    setVinyls((prev) => prev.filter((v) => v.id !== id));
+  async function loadVinyls() {
+    try {
+      const data = await getVinyls();
+      setVinyls(data);
+    } catch (err) {
+      console.error("Erro ao buscar vinis", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadVinyls();
+  }, []);
+
+  async function handleDelete(id) {
+    const confirm = window.confirm("Deseja excluir este vinil?");
+    if (!confirm) return;
+
+    try {
+      await deleteVinyl(id);
+      setVinyls((prev) => prev.filter((v) => v.id !== id));
+    } catch (err) {
+      alert("Erro ao excluir vinil");
+      console.error(err);
+    }
+  }
+
+  if (loading) {
+    return <p className="text-zinc-400">Carregando coleção...</p>;
   }
 
   if (vinyls.length === 0) {
@@ -29,12 +50,12 @@ export default function VinylList() {
 
       <div
         className="
-        grid gap-6
-        grid-cols-1
-        sm:grid-cols-2
-        md:grid-cols-3
-        lg:grid-cols-4
-      "
+          grid gap-6
+          grid-cols-1
+          sm:grid-cols-2
+          md:grid-cols-3
+          lg:grid-cols-4
+        "
       >
         {vinyls.map((vinyl) => (
           <VinylCard key={vinyl.id} vinyl={vinyl} onDelete={handleDelete} />

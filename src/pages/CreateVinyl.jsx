@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
+import { createVinyl } from "../services/api";
 
 export default function CreateVinyl() {
   const [formData, setFormData] = useState({
@@ -11,8 +12,7 @@ export default function CreateVinyl() {
     coverCondition: "",
     quantity: 1,
     notes: "",
-    coverImage: null,
-    preview: null,
+    coverImageUrl: "",
   });
 
   function handleChange(e) {
@@ -20,21 +20,32 @@ export default function CreateVinyl() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleImage(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setFormData((prev) => ({
-      ...prev,
-      coverImage: file,
-      preview: URL.createObjectURL(file),
-    }));
-  }
-
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    console.log(formData);
-    // aqui depois você envia pra API
+
+    try {
+      await createVinyl({
+        ...formData,
+        year: Number(formData.year),
+        quantity: Number(formData.quantity),
+      });
+
+      alert("🎶 Vinil cadastrado com sucesso!");
+
+      setFormData({
+        artist: "",
+        album: "",
+        year: "",
+        genre: "",
+        coverCondition: "",
+        quantity: 1,
+        notes: "",
+        coverImageUrl: "",
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao cadastrar vinil");
+    }
   }
 
   return (
@@ -48,19 +59,39 @@ export default function CreateVinyl() {
         </h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input label="Artista" name="artist" onChange={handleChange} />
-          <Input label="Álbum" name="album" onChange={handleChange} />
+          <Input
+            label="Artista"
+            name="artist"
+            value={formData.artist}
+            onChange={handleChange}
+          />
+
+          <Input
+            label="Álbum"
+            name="album"
+            value={formData.album}
+            onChange={handleChange}
+          />
+
           <Input
             label="Ano de lançamento"
             name="year"
             type="number"
+            value={formData.year}
             onChange={handleChange}
           />
-          <Input label="Gênero" name="genre" onChange={handleChange} />
+
+          <Input
+            label="Gênero"
+            name="genre"
+            value={formData.genre}
+            onChange={handleChange}
+          />
 
           <Select
             label="Estado da capa"
             name="coverCondition"
+            value={formData.coverCondition}
             onChange={handleChange}
             options={["Muito bom", "Bom", "Ruim", "Péssimo"]}
           />
@@ -70,6 +101,7 @@ export default function CreateVinyl() {
             name="quantity"
             type="number"
             min={1}
+            value={formData.quantity}
             onChange={handleChange}
           />
         </div>
@@ -79,25 +111,33 @@ export default function CreateVinyl() {
           <textarea
             name="notes"
             rows="3"
+            value={formData.notes}
             onChange={handleChange}
             className="w-full mt-1 rounded-lg bg-zinc-800 text-white p-2.5 sm:p-3 outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
 
-        <div className="mt-6 flex flex-col sm:flex-row gap-4">
-          <label className="w-full sm:w-auto text-center cursor-pointer bg-zinc-800 px-4 py-3 rounded-lg text-sm text-white hover:bg-zinc-700">
-            Upload da capa
-            <input type="file" hidden accept="image/*" onChange={handleImage} />
-          </label>
-
-          {formData.preview && (
-            <img
-              src={formData.preview}
-              alt="Preview"
-              className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-lg border border-zinc-700 self-center sm:self-start"
-            />
-          )}
+        <div className="mt-5">
+          <Input
+            label="URL da capa do disco"
+            name="coverImageUrl"
+            placeholder="https://..."
+            value={formData.coverImageUrl}
+            onChange={handleChange}
+          />
         </div>
+
+        {formData.coverImageUrl && (
+          <div className="mt-4">
+            <p className="text-sm text-zinc-400 mb-2">Preview da capa</p>
+            <img
+              src={formData.coverImageUrl}
+              alt="Capa do vinil"
+              className="w-32 h-32 object-cover rounded-lg border border-zinc-700"
+              onError={(e) => (e.target.style.display = "none")}
+            />
+          </div>
+        )}
 
         <button
           type="submit"
